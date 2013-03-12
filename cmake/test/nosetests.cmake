@@ -55,18 +55,15 @@ function(catkin_add_nosetests path)
     set(_covarg " --with-coverage")
   endif()
 
-  # strip PROJECT_SOURCE_DIR from output_file_name
+  # strip PROJECT_SOURCE_DIR and PROJECT_BINARY_DIR prefix from output_file_name
   set(output_file_name ${path})
-  string(REGEX REPLACE "^${PROJECT_SOURCE_DIR}" "" output_file_name ${output_file_name})
+  _strip_path_prefix(output_file_name "${output_file_name}" "${PROJECT_SOURCE_DIR}")
+  _strip_path_prefix(output_file_name "${output_file_name}" "${PROJECT_BINARY_DIR}")
   if("${output_file_name}" STREQUAL "")
-    # if for some reason we end up with nothing (e.g. catkin_add_nosetests(${PROJECT_SOURCE_DIR})
-    set(output_file_name "nosetests")
-  else()
-    # Just for niceness, make sure we have no leading /, otherwise the . replacement below hides directories 
-    string(REGEX REPLACE "^/" "" output_file_name ${output_file_name})
+    set(output_file_name ".")
   endif()
   string(REPLACE "/" "." output_file_name ${output_file_name})
-  string(REPLACE ":" "." output_file_name ${output_file_name})  # avoid the dreaded windows C:
+  string(REPLACE ":" "." output_file_name ${output_file_name})
 
   set(output_path ${CATKIN_TEST_RESULTS_DIR}/${PROJECT_NAME})
   set(cmd "${CMAKE_COMMAND} -E make_directory ${output_path}")
@@ -92,3 +89,23 @@ endif()
 if(NOT NOSETESTS)
   message(WARNING "nosetests not found, Python tests can not be run (try installing package 'python-nose')")
 endif()
+
+macro(_strip_path_prefix var value prefix)
+  if("${value}" STREQUAL "${prefix}" OR "${value}" STREQUAL "${prefix}/")
+    set(${var} "")
+  else()
+    set(${var} "${value}")
+    string(LENGTH "${prefix}/" prefix_length)
+    string(LENGTH "${value}" var_length)
+    if(${var_length} GREATER ${prefix_length})
+      string(SUBSTRING "${value}" 0 ${prefix_length} var_prefix)
+      if("${var_prefix}" STREQUAL "${prefix}/")
+        # passing length -1 does not work for CMake < 2.8.5
+        # http://public.kitware.com/Bug/view.php?id=10740
+        string(LENGTH "${value}" _rest)
+        math(EXPR _rest "${_rest} - ${prefix_length}")
+        string(SUBSTRING "${value}" ${prefix_length} ${_rest} ${var})
+      endif()
+    endif()
+  endif()
+endmacro()
