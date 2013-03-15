@@ -48,6 +48,9 @@ for /F "tokens=* delims=;" %%a in ("%_CATKIN_ENVIRONMENT_HOOKS%") do (
   )
 )
 
+REM Some packages put dll's into lib, but these need to be in the PATH.
+set PATH=%LD_LIBRARY_PATH%;%PATH%
+
 REM unset temporary variables
 set _SETUP_UTIL=
 set _PYTHON=
