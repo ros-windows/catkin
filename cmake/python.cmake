@@ -17,7 +17,8 @@ if(SETUPTOOLS_DEB_LAYOUT)
   set(SETUPTOOLS_ARG_EXTRA "--install-layout=deb")
 else()
   set(PYTHON_PACKAGES_DIR site-packages)
-  file(TO_NATIVE_PATH ${CMAKE_INSTALL_PREFIX}/bin PYTHON_INSTALL_PREFIX) # setuptools is fussy about windows paths
+  # setuptools is fussy about windows paths, make sure the install prefix is in native format
+  file(TO_NATIVE_PATH "${CMAKE_INSTALL_PREFIX}" SETUPTOOLS_INSTALL_PREFIX)
 endif()
 
 if(NOT WIN32)
